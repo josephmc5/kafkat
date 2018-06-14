@@ -19,7 +19,7 @@ module Kafkat
     class SetReplicationFactor < Base
       register_as 'set-replication-factor'
 
-      usage 'set-replication-factor [topic] [--newrf <n>] [--brokers id[,id]]',
+      usage 'set-replication-factor [topic] [--throttle <n>] [--newrf <n>] [--brokers id[,id]]',
             'Set the replication factor of'
 
       def run
@@ -32,10 +32,12 @@ module Kafkat
         opts = Trollop.options do
           opt :brokers, "the comma-separated list of broker the new partitions must be assigned to", type: :string
           opt :newrf, "the new replication factor", type: :integer, required: true
+          opt :throttle, "the movement of partitions will be throttled to this value (bytes/sec)", type: :string, required: true
         end
 
         broker_ids = opts[:brokers] && opts[:brokers].split(',').map(&:to_i)
         new_rf = opts[:newrf]
+        throttle = opts[:throttle]
 
         if new_rf < 1
           puts "ERROR: replication factor is smaller than 1"
@@ -83,7 +85,7 @@ module Kafkat
           result = nil
           begin
             print "\nBeginning.\n"
-            result = admin.reassign!(assignments)
+            result = admin.reassign!(assignments,throttle)
             print "Started.\n"
           rescue Admin::ExecutionFailedError
             print result

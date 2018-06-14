@@ -36,7 +36,7 @@ module Kafkat
         file.unlink
       end
 
-      def reassign!(assignments)
+      def reassign!(assignments,throttle)
         file = Tempfile.new('kafkat-partitions.json')
 
         json_partitions = []
@@ -58,6 +58,7 @@ module Kafkat
 
         run_tool(
           'kafka-reassign-partitions',
+            '--throttle', throttle,
             '--execute',
             '--reassignment-json-file', file.path
         )
